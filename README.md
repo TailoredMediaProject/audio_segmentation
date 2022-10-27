@@ -19,7 +19,22 @@ Running ```build.sh``` will fetch sources and prebuilt binaries, build first the
  
 ## Run
 
-When starting the container, the media file directory and the result directory 
+### Starting the container
+
+To run the container, execute ```run.sh```. You may need to make the following adjustments to this script:
+- source media folder on host maching (to be mounted as volume into the container)
+- folder to store results on host machine (to be mounted as volume into the container)
+- the port number on the host machine (in case the default 8888 is already taken)
+
+After starting up the container will print the URL to connect to the Jupyter notebook in the browser. Alternatively, you can open http://<host>:<port> in your browser and enter the token printed on the command line.
+
+### Running the segmenter 
+
+The notebook defines a ```mediafiles``` list with the filenames of the media files in the source folder. This list needs to be adjusted to the files present.
+
+The algorithm uses a set of default parameters. Those can be initialised by calling ```segwrapper.get_default_params()```, which returns a dictionary with the parameters. A parameter set can be printed using ```segwrapper.print_params(params)```. Parameters can be modified by changing the respective value in the dictionary.
+
+```segwrapper.segment_plot``` calls the entire pipeline, and puts result CSV files and plots into the result folder.
 
 
 # Acknowledgement
