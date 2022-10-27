@@ -345,18 +345,20 @@ def classify_segments(df,params):
 		
         print(g,hosted_score,music_score,ad_score,info_score)		
 
+        sth = params['score_thresholds']
+        
         cls = 'unknown'
-        if music_score>0.7 and hosted_score<0.5:
+        if music_score>sth['music_p']['music_min'] and hosted_score<sth['music_p']['music_max']:
             cls = 'music_p'
-        if hosted_score>0.5 and music_score>0.1:
+        if hosted_score>sth['music_h']['hosted_min'] and music_score>sth['music_h']['music_min']:
             cls = 'music_h'
-        if hosted_score>0.5 and info_score>0.5 and music_score<0.1:
+        if hosted_score>sth['info_h']['hosted_min'] and info_score>sth['info_h']['info_min'] and music_score<sth['info_h']['music_max']:
             cls = 'info_h'
-        if hosted_score>0.5 and info_score<0.5 and music_score<0.1:
+        if hosted_score>sth['talk_h']['hosted_min'] and info_score<sth['talk_h']['info_max'] and music_score<sth['talk_h']['music_max']:
             cls = 'talk_h'
-        if hosted_score<0.5 and info_score>0.5 and music_score<0.1:
+        if hosted_score<sth['talk/info']['hosted_max'] and info_score>sth['talk/info']['info_min'] and music_score<sth['talk/info']['music_max']:
             cls = 'talk/info'
-        if ad_score>0.5 and music_score<0.1 and hosted_score<0.4:
+        if ad_score>sth['ad']['ad_min'] and music_score<sth['ad']['music_max'] and hosted_score<sth['ad']['hosted_max']:
             cls = 'ad'		
 
         for index, row in grpmembers.iterrows():        
