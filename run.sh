@@ -1,2 +1,2 @@
-sudo docker run --gpus 0 -v /home/baw/data/audio_segmentation/mediathek_content:/inaSpeechSegmenter/media -v /home/baw/audio_segmentation/results/:/results -it -p 9882:8888 audioseg
+docker run --gpus 0 -v /media/on/host:/inaSpeechSegmenter/media -v /results/on/host:/results -it -p 8888:8888 audioseg
 

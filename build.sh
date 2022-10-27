@@ -4,7 +4,7 @@ git clone https://github.com/ina-foss/inaSpeechSegmenter.git
 
 #build INA speech segmenter docker
 cd inaSpeechSegmenter
-sudo docker build -t inaspeechseg .
+docker build -t inaspeechseg .
 cd ..
 
 # get LIUM diarisation
@@ -13,6 +13,6 @@ gunzip lium_spkdiarization-8.4.1.jar.gz
 
 
 # build combined docker
-sudo docker build -t audioseg .
+docker build -t audioseg .
 
 
