@@ -20,6 +20,8 @@ def lium_segmenter(media,outfile):
 
     liumdir = '/lium'
     
+    os.remove(liumdir+'/tmp.wav')
+    
     subprocess.run(['ffmpeg','-i',media,liumdir+'/tmp.wav'], capture_output=True)
     
     subprocess.run(['java','-Xmx2024m','-jar','./LIUM_SpkDiarization-8.4.1.jar','--fInputMask='+liumdir+'/tmp.wav','--sOutputMask='+outfile,'--doCEClustering','tmp'],cwd=liumdir,capture_output=True)
@@ -43,12 +45,17 @@ def merge_plot(media,outdir,inafile,liumfile,params=None,timerange=None):
     mediabasename = '.'.join(media.split('.')[:-2])
     mediabasename = media.split('/')[-1]
     
-    merge_visualise.plot(merged_df,os.path.join(outdir,mediabasename+'_plot_merged.png'),timerange)
-    merge_visualise.plot(merged_df,os.path.join(outdir,mediabasename+'_plot_merged_speakers.png'),timerange,['speakers'])
+    merged_df.to_csv(os.path.join(outdir,mediabasename+'_merged.csv'))
+    merge_visualise.plot(merged_df,os.path.join(outdir,mediabasename+'_plot_merged.png'),timerange,None,params['same_grp_gap_tol'])
+    merge_visualise.plot(merged_df,os.path.join(outdir,mediabasename+'_plot_merged_speakers.png'),timerange,['speakers'],params['same_grp_gap_tol'])
    
-    merge_visualise.plot(merged_df,os.path.join(outdir,mediabasename+'_plot_merged_groups.png'),timerange,['groups'])
+    merge_visualise.plot(merged_df,os.path.join(outdir,mediabasename+'_plot_merged_groups.png'),timerange,['groups'],params['same_grp_gap_tol'])
+    
+    print("plotting grps + classes")
   
-    merge_visualise.plot(merged_df,os.path.join(outdir,mediabasename+'_plot_merged_group_cls.png'),timerange,['groupclasses'])
+    merge_visualise.plot(merged_df,os.path.join(outdir,mediabasename+'_plot_merged_group_cls.png'),timerange,['groupclasses'],params['same_grp_gap_tol'])
+    
+    print("..done")
 
     
 def segment_plot(media,outdir,params=None,timerange=None):
@@ -62,13 +69,14 @@ def segment_plot(media,outdir,params=None,timerange=None):
     lium_segmenter(media,liumfn)
     
     merge_plot(media,outdir,inafn,liumfn,params=params,timerange=timerange)
-    
+        
 def get_default_params():
     
     params = {}
     params['song_min_dur'] = 30
     params['grp_speaker_pause'] = 120
     params['grp_min_dur'] = 30
+    params['same_grp_gap_tol'] = 3
     
     sth = {}
     params['score_thresholds'] = sth

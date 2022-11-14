@@ -348,7 +348,7 @@ def classify_segments(df,params):
         sth = params['score_thresholds']
         
         cls = 'unknown'
-        if music_score>sth['music_p']['music_min'] and hosted_score<sth['music_p']['music_max']:
+        if music_score>sth['music_p']['music_min'] and hosted_score<sth['music_p']['hosted_max']:
             cls = 'music_p'
         if hosted_score>sth['music_h']['hosted_min'] and music_score>sth['music_h']['music_min']:
             cls = 'music_h'
@@ -367,7 +367,7 @@ def classify_segments(df,params):
 
     return df
 	
-def plot(df,fn,timerange=None,specific=None):
+def plot(df,fn,timerange=None,specific=None,grp_gap_tol=0):
 
     # check for specific categories to plot
     speakers = False
@@ -381,6 +381,7 @@ def plot(df,fn,timerange=None,specific=None):
         if 'groupclasses' in specific:
             groupclasses = True			
     data = []
+    
 
     groupdata = {}
 	
@@ -405,7 +406,25 @@ def plot(df,fn,timerange=None,specific=None):
             else:
                 groupdata[row['group_id']] = (row['start'], row['stop'])
         if groupclasses:
-            data.append((row['start'], row['stop'],row['group_cls']))
+            # check adjacent segments of same group should be merged - SLOW!
+            #if len(data)==0:
+            #    data.append((row['start'], row['stop'],row['group_cls'],row['group_id']))
+            #else:
+            #    for i,d in enumerate(data):
+            #        if len(d)<4:
+            #            continue
+            #        if d[3] == row['group_id']:
+            #            if abs(d[1]-row['start']) < grp_gap_tol:
+            #                #data[i] = (d[0],row['stop'],d[2],d[3])
+            #                data.append((row['start']-min(0,row['start']-d[1]), row['stop'],row['group_cls'],row['group_id']))
+            #            elif abs(d[0]-row['stop']) < grp_gap_tol:
+            #                #data[i] = (row['start'],d[1],d[2],d[3])
+            #                data.append((row['start'], row['stop']+-min(0,d[0]-row['stop']),row['group_cls'],row['group_id']))
+            #            else:
+            #                data.append((row['start'], row['stop'],row['group_cls'],row['group_id']))
+            #        else:
+                        data.append((row['start'], row['stop'],row['group_cls'],row['group_id']))
+
 			
         data.append((int(row['start']),int(row['stop']),t))
 		
@@ -436,6 +455,7 @@ def plot(df,fn,timerange=None,specific=None):
     # renumber
     cats = {k: v for v, k in enumerate(cats.keys())}
 
+    #print(data)
 	
     colormapping = {}
 	
