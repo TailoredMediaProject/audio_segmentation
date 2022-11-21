@@ -128,6 +128,39 @@ def det_jingle(r,jingledur):
     return r
 	
 	
+def check_do_merge(lastprevgrp,active_segments,df,grp_min_dur,grp_speaker_pause, laststart):
+    
+    # check if last of one group is later than that of group with lower id,
+	# or if outdated group is too short
+    merge = []
+    for l1 in lastprevgrp:
+        for l2 in lastprevgrp:
+                            
+            if l1==l2: continue
+            if (l1<l2) and (lastprevgrp[l1]>lastprevgrp[l2]):
+                merge.append((l1,l2))
+            if (laststart == None) or (laststart > lastprevgrp[l1] + max(grp_min_dur,grp_speaker_pause)):
+                grpstart = 999999999999
+                grpstop = -1
+
+                for a in active_segments:
+                    if active_segments[a][2] == l1:
+                        for i in active_segments[a][1]:
+                            grpstart = min(grpstart,df.at[i,'start'])
+                            grpstop = max(grpstop,df.at[i,'stop'])
+
+                if grpstop - grpstart < grp_min_dur:
+                    merge.append((l1,l2))
+
+    if len(merge)>0:
+        for m in merge:
+            for a in active_segments:
+                if active_segments[a][2] == m[0]:
+                    active_segments[a] = (active_segments[a][0],active_segments[a][1],m[1])
+
+    return lastprevgrp,active_segments,df,grp_min_dur,grp_speaker_pause           
+                    
+    
 def group_segments(df,params):
 
     df['group_id'] = ''
@@ -222,34 +255,7 @@ def group_segments(df,params):
             else:
                 lastprevgrp[active_segments[a][2]] = active_segments[a][0]            
 
-        # check if last of one group is later than that of group with lower id,
-		# or if outdated group is too short
-        merge = []
-        for l1 in lastprevgrp:
-            for l2 in lastprevgrp:
-                if l1==l2: continue
-                if (l1<l2) and (lastprevgrp[l1]>lastprevgrp[l2]):
-                    merge.append((l1,l2))
-                if row['start'] > lastprevgrp[l1] + max(grp_min_dur,grp_speaker_pause):
-                    grpstart = 999999999999
-                    grpstop = -1
-
-                    for a in active_segments:
-                        if active_segments[a][2] == l1:
-                            for i in active_segments[a][1]:
-                                grpstart = min(grpstart,df.at[i,'start'])
-                                grpstop = max(grpstop,df.at[i,'stop'])
-
-
-                    if grpstop - grpstart < grp_min_dur:
-                        merge.append((l1,l2))
-
-				
-        if len(merge)>0:
-            for m in merge:
-                for a in active_segments:
-                    if active_segments[a][2] == m[0]:
-                        active_segments[a] = (active_segments[a][0],active_segments[a][1],m[1])
+        lastprevgrp,active_segments,df,grp_min_dur,grp_speaker_pause = check_do_merge(lastprevgrp,active_segments,df,grp_min_dur,grp_speaker_pause,row['start'])
 					
         # check if segment data can be written to table
         writeToTable = []
@@ -272,6 +278,9 @@ def group_segments(df,params):
                     remainingSegments[a] = active_segments[a]
             active_segments = remainingSegments		
 
+    # final check for merging
+    lastprevgrp,active_segments,df,grp_min_dur,grp_speaker_pause = check_do_merge(lastprevgrp,active_segments,df,grp_min_dur,grp_speaker_pause,None)
+            
     # write remaining groups
     for l in lastprevgrp:
         remainingSegments = {}		
@@ -338,10 +347,11 @@ def classify_segments(df,params):
         hosted_score = longest_speaker_frac
         music_score = music_frac
         ad_score = 0.3*(min(2,speakers_permin)-2) + jingle_frac + 1- hosted_score 
+        
         if speakers_permin>=1:
             info_score = 0.3/min(3,speakers_permin) + jingle_frac + hosted_score
         else:
-            info_score = 0
+            info_score = 0.2*speakers_permin + jingle_frac + hosted_score
 		
         print(g,hosted_score,music_score,ad_score,info_score)		
 
